@@ -20,8 +20,8 @@ func New(repo *repository.Repository, cache *bigcache.BigCache) *Service {
 	}
 }
 
-func (s Service) CheckUrl(value string, result *models.Result) bool {
-	if IsValidUrl(value) {
+func (s Service) CheckUrl(url string, result *models.Result) bool {
+	if IsValidUrl(url) {
 		result.Status = "Ссылка имеет неправильный формат!"
 		result.Link = ""
 		return false
@@ -56,8 +56,8 @@ func (s Service) SaveUrlinCache(result *models.Result) error {
 	return nil
 }
 
-func (s Service) GetUrl(vars string) (string, error) {
-	link, err := s.repo.GetUrl(vars)
+func (s Service) GetUrl(url string) (string, error) {
+	link, err := s.repo.GetUrl(url)
 	if err != nil {
 		return "", err
 	}
@@ -65,8 +65,8 @@ func (s Service) GetUrl(vars string) (string, error) {
 	return link, nil
 }
 
-func (s Service) GetShortUrl(vars string) (string, error) {
-	link, err := s.repo.GetShortUrl(vars)
+func (s Service) GetShortUrl(url string) (string, error) {
+	link, err := s.repo.GetShortUrl(url)
 	if err != nil {
 		return "", err
 	}
@@ -74,29 +74,29 @@ func (s Service) GetShortUrl(vars string) (string, error) {
 	return link, nil
 }
 
-func (s Service) GetUrlCache(vars string) []byte {
-	link, _ := s.cache.Get(vars)
+func (s Service) GetUrlCache(url string) []byte {
+	link, _ := s.cache.Get(url)
 	return link
 }
 
-func (s Service) UniqueUrl(vars string) (bool, error) {
-	link, err := s.repo.GetUrlDouble(vars)
+func (s Service) UniqueUrl(url string) (bool, error) {
+	link, err := s.repo.GetUrlDouble(url)
 	if err != nil {
 		return false, err
 	}
 
-	if link == vars {
+	if link == url {
 		return false, nil
 	}
 	return true, nil
 }
 
-func (s Service) UniqueUrlCache(vars string) bool {
-	shortUrl, _ := s.cache.Get(vars)
+func (s Service) UniqueUrlCache(url string) bool {
+	shortUrl, _ := s.cache.Get(url)
 	strShortUrl := string(shortUrl)
 	longUrl, _ := s.cache.Get(strShortUrl)
 	strLongUrl := string(longUrl)
-	if strLongUrl == vars {
+	if strLongUrl == url {
 		return false
 	}
 	return true
