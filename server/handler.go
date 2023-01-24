@@ -57,9 +57,10 @@ func (s *Server) indexPageCache(w http.ResponseWriter, r *http.Request) {
 			s.service.SaveUrlinCache(&result)
 		} else {
 			fmt.Println("копия")
-			link := s.service.GetShortUrl(r.FormValue("s"))
+			link := s.service.GetUrlCache(r.FormValue("s"))
+			strlink := string(link)
 			io.WriteString(w, "короткая ссылка: ")
-			io.WriteString(w, link)
+			io.WriteString(w, strlink)
 			return
 		}
 	}
