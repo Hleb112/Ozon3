@@ -6,6 +6,7 @@ import (
 	"Ozon/service"
 	"context"
 	"database/sql"
+	"flag"
 	"github.com/allegro/bigcache/v3"
 	_ "github.com/lib/pq"
 	"log"
@@ -13,7 +14,9 @@ import (
 )
 
 func main() {
-	useCache := true
+	useCache := flag.Bool("cache", false, "turn to true to use cache instead of db")
+	flag.Parse()
+
 	db, err := sql.Open("postgres", "host=localhost port=5432 user=postgres "+
 		"password=admin dbname=links sslmode=disable")
 	if err != nil {

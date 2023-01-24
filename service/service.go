@@ -4,6 +4,8 @@ import (
 	"Ozon/models"
 	"Ozon/repository"
 	"github.com/allegro/bigcache/v3"
+	"math/rand"
+	"net/url"
 )
 
 type Service struct {
@@ -19,7 +21,7 @@ func New(repo *repository.Repository, cache *bigcache.BigCache) *Service {
 }
 
 func (s Service) CheckUrl(value string, result *models.Result) bool {
-	if !s.repo.IsValidUrl(value) {
+	if IsValidUrl(value) {
 		result.Status = "Ссылка имеет неправильный формат!"
 		result.Link = ""
 		return false
@@ -28,29 +30,48 @@ func (s Service) CheckUrl(value string, result *models.Result) bool {
 }
 
 func (s Service) Shorting() string {
-	sh := s.repo.Shorting()
-	return sh
+	return shorting()
 }
 
 func (s Service) SaveUrl(result *models.Result) {
-	s.repo.SaveUrl(result)
+	err := s.repo.SaveUrl(result)
+	if err != nil {
+		return
+	}
 }
 
-func (s Service) SaveUrlinCache(result *models.Result) {
-	//s.UniqueCache()
-	s.cache.Set(result.Link, []byte(result.ShortLink))
-	s.cache.Set(result.ShortLink, []byte(result.Link))
+func (s Service) SaveUrlinCache(result *models.Result) error {
+	err := s.cache.Set(result.Link, []byte(result.ShortLink))
+	if err != nil {
+		return err
+	}
+
+	err = s.cache.Set(result.ShortLink, []byte(result.Link))
+	if err != nil {
+		return err
+	}
+
 	result.Status = "Сокращение было выполнено успешно"
+
+	return nil
 }
 
-func (s Service) GetUrl(vars string) string {
-	link := s.repo.GetUrl(vars)
-	return link
+func (s Service) GetUrl(vars string) (string, error) {
+	link, err := s.repo.GetUrl(vars)
+	if err != nil {
+		return "", err
+	}
+
+	return link, nil
 }
 
-func (s Service) GetShortUrl(vars string) string {
-	link := s.repo.GetShortUrl(vars)
-	return link
+func (s Service) GetShortUrl(vars string) (string, error) {
+	link, err := s.repo.GetShortUrl(vars)
+	if err != nil {
+		return "", err
+	}
+
+	return link, nil
 }
 
 func (s Service) GetUrlCache(vars string) []byte {
@@ -58,11 +79,16 @@ func (s Service) GetUrlCache(vars string) []byte {
 	return link
 }
 
-func (s Service) UniqueUrl(vars string) bool {
-	if s.repo.GetUrlDouble(vars) == vars {
-		return false
+func (s Service) UniqueUrl(vars string) (bool, error) {
+	link, err := s.repo.GetUrlDouble(vars)
+	if err != nil {
+		return false, err
 	}
-	return true
+
+	if link == vars {
+		return false, nil
+	}
+	return true, nil
 }
 
 func (s Service) UniqueUrlCache(vars string) bool {
@@ -74,4 +100,25 @@ func (s Service) UniqueUrlCache(vars string) bool {
 		return false
 	}
 	return true
+}
+
+func IsValidUrl(token string) bool {
+	_, err := url.ParseRequestURI(token)
+	if err != nil {
+		return false
+	}
+	u, err := url.Parse(token)
+	if err != nil || u.Host == "" {
+		return false
+	}
+	return true
+}
+
+func shorting() string {
+	const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_"
+	b := make([]byte, 10)
+	for i := range b {
+		b[i] = letterBytes[rand.Intn(len(letterBytes))]
+	}
+	return string(b)
 }

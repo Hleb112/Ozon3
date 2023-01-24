@@ -3,8 +3,6 @@ package repository
 import (
 	"Ozon/models"
 	"database/sql"
-	"math/rand"
-	"net/url"
 )
 
 type Repository struct {
@@ -17,50 +15,51 @@ func New(db *sql.DB) *Repository {
 	}
 }
 
-func (rep Repository) IsValidUrl(token string) bool {
-	_, err := url.ParseRequestURI(token)
+func (rep Repository) SaveUrl(result *models.Result) error {
+	_, err := rep.db.Exec("insert into links3 (link, short) values ($1, $2)", result.Link, result.ShortLink)
 	if err != nil {
-		return false
+		return err
 	}
-	u, err := url.Parse(token)
-	if err != nil || u.Host == "" {
-		return false
-	}
-	return true
-}
-
-func (rep Repository) Shorting() string {
-	const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_"
-	b := make([]byte, 10)
-	for i := range b {
-		b[i] = letterBytes[rand.Intn(len(letterBytes))]
-	}
-	return string(b)
-}
-
-func (rep Repository) SaveUrl(result *models.Result) {
-	rep.db.Exec("insert into links3 (link, short) values ($1, $2)", result.Link, result.ShortLink)
 	result.Status = "Сокращение было выполнено успешно(postgres)"
 
+	return nil
 }
 
-func (rep Repository) GetUrl(vars string) string {
+func (rep Repository) GetUrl(vars string) (string, error) {
+	rows := rep.db.QueryRow("select link from links3 where short = $1", vars)
+
 	var link string
-	rows := rep.db.QueryRow("select link from links3 where short = $1 limit 1", vars)
-	rows.Scan(&link)
-	return link
+
+	err := rows.Scan(&link)
+	if err != nil {
+		return "", err
+	}
+
+	return link, nil
 }
 
-func (rep Repository) GetUrlDouble(vars string) string {
+func (rep Repository) GetUrlDouble(vars string) (string, error) {
+	rows := rep.db.QueryRow("select link from links3 where link = $1", vars)
+
 	var link string
-	rows := rep.db.QueryRow("select link from links3 where link = $1 limit 1", vars)
-	rows.Scan(&link)
-	return link
+
+	err := rows.Scan(&link)
+	if err != nil {
+		return "", err
+	}
+
+	return link, nil
 }
 
-func (rep Repository) GetShortUrl(vars string) string {
+func (rep Repository) GetShortUrl(vars string) (string, error) {
+	rows := rep.db.QueryRow("select short from links3 where link = $1", vars)
+
 	var link string
-	rows := rep.db.QueryRow("select short from links3 where link = $1 limit 1", vars)
-	rows.Scan(&link)
-	return link
+
+	err := rows.Scan(&link)
+	if err != nil {
+		return "", err
+	}
+
+	return link, nil
 }
