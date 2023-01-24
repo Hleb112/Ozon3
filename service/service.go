@@ -37,6 +37,7 @@ func (s Service) SaveUrl(result *models.Result) {
 }
 
 func (s Service) SaveUrlinCache(result *models.Result) {
+	//s.UniqueCache()
 	s.cache.Set(result.Link, []byte(result.ShortLink))
 	s.cache.Set(result.ShortLink, []byte(result.Link))
 	result.Status = "Сокращение было выполнено успешно"
@@ -47,7 +48,30 @@ func (s Service) GetUrl(vars string) string {
 	return link
 }
 
+func (s Service) GetShortUrl(vars string) string {
+	link := s.repo.GetShortUrl(vars)
+	return link
+}
+
 func (s Service) GetUrlCache(vars string) []byte {
 	link, _ := s.cache.Get(vars)
 	return link
+}
+
+func (s Service) UniqueUrl(vars string) bool {
+	if s.repo.GetUrlDouble(vars) == vars {
+		return false
+	}
+	return true
+}
+
+func (s Service) UniqueUrlCache(vars string) bool {
+	shortUrl, _ := s.cache.Get(vars)
+	strShortUrl := string(shortUrl)
+	longUrl, _ := s.cache.Get(strShortUrl)
+	strLongUrl := string(longUrl)
+	if strLongUrl == vars {
+		return false
+	}
+	return true
 }

@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	useCache := false
+	useCache := true
 	db, err := sql.Open("postgres", "host=localhost port=5432 user=postgres "+
 		"password=admin dbname=links sslmode=disable")
 	if err != nil {

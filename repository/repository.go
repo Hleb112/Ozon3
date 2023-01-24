@@ -30,7 +30,7 @@ func (rep Repository) IsValidUrl(token string) bool {
 }
 
 func (rep Repository) Shorting() string {
-	const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_"
 	b := make([]byte, 10)
 	for i := range b {
 		b[i] = letterBytes[rand.Intn(len(letterBytes))]
@@ -39,14 +39,28 @@ func (rep Repository) Shorting() string {
 }
 
 func (rep Repository) SaveUrl(result *models.Result) {
-	rep.db.Exec("insert into links2 (link, shortlink) values ($1, $2)", result.Link, result.ShortLink)
+	rep.db.Exec("insert into links3 (link, short) values ($1, $2)", result.Link, result.ShortLink)
 	result.Status = "Сокращение было выполнено успешно(postgres)"
 
 }
 
 func (rep Repository) GetUrl(vars string) string {
 	var link string
-	rows := rep.db.QueryRow("select link from links2 where shortlink = $1 limit 1", vars)
+	rows := rep.db.QueryRow("select link from links3 where short = $1 limit 1", vars)
+	rows.Scan(&link)
+	return link
+}
+
+func (rep Repository) GetUrlDouble(vars string) string {
+	var link string
+	rows := rep.db.QueryRow("select link from links3 where link = $1 limit 1", vars)
+	rows.Scan(&link)
+	return link
+}
+
+func (rep Repository) GetShortUrl(vars string) string {
+	var link string
+	rows := rep.db.QueryRow("select short from links3 where link = $1 limit 1", vars)
 	rows.Scan(&link)
 	return link
 }

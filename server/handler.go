@@ -2,6 +2,7 @@ package server
 
 import (
 	"Ozon/models"
+	"fmt"
 	"github.com/gorilla/mux"
 	"html/template"
 	"io"
@@ -26,13 +27,22 @@ func (s *Server) indexPage(w http.ResponseWriter, r *http.Request) {
 	templ, _ := template.ParseFiles("template/index.html")
 	result := models.Result{}
 	if r.Method == "POST" {
+		fmt.Println(r.FormValue("s"))
 		if s.service.CheckUrl(r.FormValue("s"), &result) != true {
 			templ.Execute(w, result)
 			return
 		}
-		result.Link = r.FormValue("s")
-		result.ShortLink = s.service.Shorting()
-		s.service.SaveUrl(&result)
+		if s.service.UniqueUrl(r.FormValue("s")) == true {
+			result.Link = r.FormValue("s")
+			result.ShortLink = s.service.Shorting()
+			s.service.SaveUrl(&result)
+		} else {
+			fmt.Println("копия")
+			link := s.service.GetShortUrl(r.FormValue("s"))
+			io.WriteString(w, "короткая ссылка: ")
+			io.WriteString(w, link)
+			return
+		}
 	}
 	templ.Execute(w, result)
 }
@@ -41,13 +51,17 @@ func (s *Server) indexPageCache(w http.ResponseWriter, r *http.Request) {
 	templ, _ := template.ParseFiles("template/index.html")
 	result := models.Result{}
 	if r.Method == "POST" {
-		if s.service.CheckUrl(r.FormValue("s"), &result) != true {
-			templ.Execute(w, result)
+		if s.service.UniqueUrlCache(r.FormValue("s")) == true {
+			result.Link = r.FormValue("s")
+			result.ShortLink = s.service.Shorting()
+			s.service.SaveUrlinCache(&result)
+		} else {
+			fmt.Println("копия")
+			link := s.service.GetShortUrl(r.FormValue("s"))
+			io.WriteString(w, "короткая ссылка: ")
+			io.WriteString(w, link)
 			return
 		}
-		result.Link = r.FormValue("s")
-		result.ShortLink = s.service.Shorting()
-		s.service.SaveUrlinCache(&result)
 	}
 	templ.Execute(w, result)
 }
