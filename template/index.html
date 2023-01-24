@@ -9,7 +9,7 @@
 {{.Status}}
 {{end}}
 {{if .Link}}
-Сокращённая ссылка ({{.Link}}) <input type="url" value="http://localhost:8000/{{.Code}}">
+Сокращённая ссылка ({{.Link}}) <input type="url" value="http://localhost:8000/to/{{.ShortLink}}">
 {{else}}
 <br>
 <form action="/" name=f method="POST">
