@@ -21,7 +21,7 @@ func New(repo *repository.Repository, cache *bigcache.BigCache) *Service {
 }
 
 func (s Service) CheckUrl(url string, result *models.Result) bool {
-	if IsValidUrl(url) {
+	if !IsValidUrl(url) {
 		result.Status = "Ссылка имеет неправильный формат!"
 		result.Link = ""
 		return false

@@ -76,6 +76,16 @@ func (s *Server) indexPageCache(w http.ResponseWriter, r *http.Request) {
 	templ, _ := template.ParseFiles("template/index.html")
 	result := models.Result{}
 	if r.Method == http.MethodPost {
+		if s.service.CheckUrl(r.FormValue("s"), &result) != true {
+
+			err := templ.Execute(w, result)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+
+			return
+		}
 		if s.service.UniqueUrlCache(r.FormValue("s")) == true {
 			result.Link = r.FormValue("s")
 			result.ShortLink = s.service.Shorting()
